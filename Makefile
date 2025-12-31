@@ -1,15 +1,19 @@
-.PHONY: all build data test lint report clean help
+.PHONY: all build data fundamentals test lint report clean help
 
 # Default target
-all: build data test report
+all: build data fundamentals test report
 
 # Install package in development mode
 build:
 	pip install -e ".[dev,analysis]"
 
-# Download and process all data
+# Download and process raw data (Phase 1)
 data:
 	python -m banklab.run --stage data
+
+# Normalize fundamentals and calculate KPIs (Phase 2)
+fundamentals:
+	python -m banklab.run --stage fundamentals
 
 # Run test suite
 test:
@@ -45,13 +49,14 @@ clean-all: clean
 help:
 	@echo "BankLab Makefile Commands:"
 	@echo ""
-	@echo "  make all       - Full pipeline: build → data → test → report"
-	@echo "  make build     - Install package in development mode"
-	@echo "  make data      - Download and process all data"
-	@echo "  make test      - Run pytest test suite"
-	@echo "  make lint      - Run ruff linter"
-	@echo "  make format    - Auto-format code with ruff"
-	@echo "  make report    - Generate analysis report"
-	@echo "  make clean     - Remove cached data and build artifacts"
-	@echo "  make clean-all - Remove all data including processed outputs"
-	@echo "  make help      - Show this help message"
+	@echo "  make all          - Full pipeline: build → data → fundamentals → test → report"
+	@echo "  make build        - Install package in development mode"
+	@echo "  make data         - Download and process raw data (Phase 1)"
+	@echo "  make fundamentals - Normalize facts and calculate KPIs (Phase 2)"
+	@echo "  make test         - Run pytest test suite"
+	@echo "  make lint         - Run ruff linter"
+	@echo "  make format       - Auto-format code with ruff"
+	@echo "  make report       - Generate analysis report (requires Quarto)"
+	@echo "  make clean        - Remove cached data and build artifacts"
+	@echo "  make clean-all    - Remove all data including processed outputs"
+	@echo "  make help         - Show this help message"

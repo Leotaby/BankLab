@@ -1,55 +1,55 @@
 files:
   prices_jpm.csv:
     source_url: https://stooq.com/q/d/l/?s=jpm.us&i=d
-    download_timestamp: '2025-12-31T16:58:43.178390+00:00'
-    file_hash: c4891218fd7c50d772f3f9f9481575f5fafa72aa7778035dcc45ad83254ddbf5
+    download_timestamp: '2025-12-31T19:24:28.920513+00:00'
+    file_hash: 7907517f704b58fa27e3108058cbe1d179f4d6c996e54174a9b8fc0a0f230844
     local_path: data/raw/market/prices_jpm.csv
     notes: Daily prices for JPM
   prices_ms.csv:
     source_url: https://stooq.com/q/d/l/?s=ms.us&i=d
-    download_timestamp: '2025-12-31T16:58:43.873386+00:00'
-    file_hash: 3ba8d071d988fa7ed099a8d028defd4ef765b3f89be23fdf7abc3351c950952f
+    download_timestamp: '2025-12-31T19:24:30.134422+00:00'
+    file_hash: 74bd518dd6471bfaa79716468d4a9342f7809f589db696640f8437faadf89e44
     local_path: data/raw/market/prices_ms.csv
     notes: Daily prices for MS
   ff5_daily.zip:
     source_url: https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_5_Factors_2x3_daily_CSV.zip
-    download_timestamp: '2025-12-31T17:04:42.868467+00:00'
+    download_timestamp: '2025-12-31T19:24:31.978455+00:00'
     file_hash: e94cd06be37eb3756608cf08ba37c1e0db9e5615959e831f62ca81c0b5914e6d
     local_path: data/raw/factors/ff5_daily.zip
     notes: Fama-French daily 5-factor model
   fred_DFF.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=DFF
-    download_timestamp: '2025-12-31T17:04:43.247369+00:00'
+    download_timestamp: '2025-12-31T19:24:34.087738+00:00'
     file_hash: 61bb1a1ddd0570613910a12314206ff7ed88294f30139bbbac0158a167a657b1
     local_path: data/raw/fred/fred_DFF.json
     notes: FRED series DFF
   fred_DGS10.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=DGS10
-    download_timestamp: '2025-12-31T17:04:44.339140+00:00'
+    download_timestamp: '2025-12-31T19:24:35.118410+00:00'
     file_hash: 3fe1e71b51e8a9805afa8e8638146a51e85ed7efd096af6bd5033706d75c2e3f
     local_path: data/raw/fred/fred_DGS10.json
     notes: FRED series DGS10
   fred_DGS2.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=DGS2
-    download_timestamp: '2025-12-31T17:04:45.682100+00:00'
+    download_timestamp: '2025-12-31T19:24:36.103459+00:00'
     file_hash: f904844baaf3e7c8ee7438696ac9fde35c0a6dd6a6d5947d65ca39ee7d9af8c9
     local_path: data/raw/fred/fred_DGS2.json
     notes: FRED series DGS2
   fred_GDPC1.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=GDPC1
-    download_timestamp: '2025-12-31T17:04:46.323388+00:00'
+    download_timestamp: '2025-12-31T19:24:36.895884+00:00'
     file_hash: 4953a4cf9e3c7e4880a21ed88f83c465dc54041840f1b983f71a091310fc814e
     local_path: data/raw/fred/fred_GDPC1.json
     notes: FRED series GDPC1
   fred_UNRATE.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=UNRATE
-    download_timestamp: '2025-12-31T17:04:47.002569+00:00'
-    file_hash: bde871a76ad71d78a0779fb28b30c0301b26bc83a623c191faf9082723badd1a
+    download_timestamp: '2025-12-31T19:24:37.713995+00:00'
+    file_hash: 3e6857e121de0eb392a81b5dfa63ba44c84d30bca89097575edda0038aa2ae2a
     local_path: data/raw/fred/fred_UNRATE.json
     notes: FRED series UNRATE
   fred_CPIAUCSL.json:
     source_url: https://api.stlouisfed.org/fred/series/observations?series_id=CPIAUCSL
-    download_timestamp: '2025-12-31T17:04:47.691647+00:00'
+    download_timestamp: '2025-12-31T19:24:38.535381+00:00'
     file_hash: 4ff4ef7da8e82ee22ca3767f529336ceb7a3d249f194e22d8aed2253464b61ac
     local_path: data/raw/fred/fred_CPIAUCSL.json
     notes: FRED series CPIAUCSL

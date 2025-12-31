@@ -1,0 +1,519 @@
+---
+title: "Fundamentals Review: JPM vs Morgan Stanley"
+subtitle: "Quarterly Financial Analysis"
+author: "BankLab Analytics"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    fig-width: 10
+    fig-height: 6
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+# Set style
+plt.style.use('seaborn-v0_8-whitegrid')
+sns.set_palette("husl")
+
+# Load data
+DATA_DIR = Path("../data/processed")
+
+# Load datasets
+fundamentals = pd.read_parquet(DATA_DIR / "fundamentals_quarterly.parquet")
+fundamentals_wide = pd.read_parquet(DATA_DIR / "fundamentals_quarterly_wide.parquet")
+kpis = pd.read_parquet(DATA_DIR / "kpis_quarterly.parquet")
+prices = pd.read_parquet(DATA_DIR / "prices_daily.parquet")
+
+# Convert dates
+fundamentals["date"] = pd.to_datetime(fundamentals["date"])
+fundamentals_wide["date"] = pd.to_datetime(fundamentals_wide["date"])
+kpis["date"] = pd.to_datetime(kpis["date"])
+prices["date"] = pd.to_datetime(prices["date"])
+
+# Filter to recent years
+MIN_YEAR = 2019
+fundamentals_wide = fundamentals_wide[fundamentals_wide["fiscal_year"] >= MIN_YEAR]
+kpis = kpis[kpis["fiscal_year"] >= MIN_YEAR]
+
+# Company colors
+COLORS = {"JPM": "#003087", "MS": "#00856A"}
+```
+
+# Executive Summary
+
+This report presents a comparative financial analysis of **JPMorgan Chase & Co. (JPM)** and **Morgan Stanley (MS)**, two of the largest U.S. financial institutions. Using publicly available SEC XBRL filings, we examine key financial metrics, profitability trends, and capital adequacy.
+
+```{python}
+#| label: summary-stats
+
+# Latest quarter data
+latest = fundamentals_wide.sort_values("date").groupby("ticker").last().reset_index()
+
+summary_items = ["total_assets", "total_equity", "net_income", "total_revenue"]
+summary_df = latest[["ticker"] + [c for c in summary_items if c in latest.columns]]
+
+# Format as billions
+for col in summary_items:
+    if col in summary_df.columns:
+        summary_df[col] = summary_df[col] / 1e9
+
+print("Latest Quarter Summary ($ Billions):")
+print(summary_df.to_string(index=False))
+```
+
+**Key Findings:**
+
+- JPM maintains larger absolute scale across all metrics
+- Both banks show resilient profitability through recent quarters
+- Capital ratios remain well above regulatory minimums
+
+---
+
+# 1. Scale Comparison
+
+## 1.1 Total Assets Trend
+
+```{python}
+#| label: fig-assets
+#| fig-cap: "Total Assets Trend ($ Billions)"
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+for ticker in ["JPM", "MS"]:
+    data = fundamentals_wide[fundamentals_wide["ticker"] == ticker].sort_values("date")
+    if "total_assets" in data.columns:
+        ax.plot(
+            data["date"], 
+            data["total_assets"] / 1e12, 
+            marker="o", 
+            label=ticker,
+            color=COLORS.get(ticker),
+            linewidth=2
+        )
+
+ax.set_xlabel("Date")
+ax.set_ylabel("Total Assets ($ Trillions)")
+ax.set_title("Total Assets: JPM vs Morgan Stanley")
+ax.legend()
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+## 1.2 Balance Sheet Composition
+
+```{python}
+#| label: fig-bs-composition
+#| fig-cap: "Balance Sheet Composition (Latest Quarter)"
+
+latest = fundamentals_wide.sort_values("date").groupby("ticker").last()
+
+# Get balance sheet items
+bs_items = ["loans_net", "trading_assets", "investment_securities", "cash_and_equivalents"]
+available_items = [c for c in bs_items if c in latest.columns]
+
+if len(available_items) > 0:
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    
+    for idx, ticker in enumerate(["JPM", "MS"]):
+        if ticker in latest.index:
+            values = [latest.loc[ticker, c] / 1e9 if pd.notna(latest.loc[ticker].get(c)) else 0 
+                      for c in available_items]
+            
+            axes[idx].barh(available_items, values, color=COLORS.get(ticker))
+            axes[idx].set_xlabel("$ Billions")
+            axes[idx].set_title(f"{ticker} Asset Composition")
+    
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Balance sheet composition data not available")
+```
+
+---
+
+# 2. Profitability Analysis
+
+## 2.1 Return on Equity (ROE)
+
+```{python}
+#| label: fig-roe
+#| fig-cap: "Annualized Return on Equity"
+
+roe_data = kpis[kpis["kpi_name"] == "roe"]
+
+if len(roe_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = roe_data[roe_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"] * 100,  # Convert to percent
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.axhline(y=10, color="gray", linestyle="--", alpha=0.5, label="10% Benchmark")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("ROE (%)")
+    ax.set_title("Return on Equity: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("ROE data not available")
+```
+
+## 2.2 Return on Assets (ROA)
+
+```{python}
+#| label: fig-roa
+#| fig-cap: "Annualized Return on Assets"
+
+roa_data = kpis[kpis["kpi_name"] == "roa"]
+
+if len(roa_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = roa_data[roa_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"] * 100,
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.axhline(y=1, color="gray", linestyle="--", alpha=0.5, label="1% Benchmark")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("ROA (%)")
+    ax.set_title("Return on Assets: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("ROA data not available")
+```
+
+## 2.3 Efficiency Ratio
+
+```{python}
+#| label: fig-efficiency
+#| fig-cap: "Efficiency Ratio (Lower is Better)"
+
+eff_data = kpis[kpis["kpi_name"] == "efficiency_ratio"]
+
+if len(eff_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = eff_data[eff_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"] * 100,
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.axhline(y=60, color="gray", linestyle="--", alpha=0.5, label="60% Target")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Efficiency Ratio (%)")
+    ax.set_title("Efficiency Ratio: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.invert_yaxis()  # Lower is better
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Efficiency ratio data not available")
+```
+
+---
+
+# 3. Capital Adequacy
+
+## 3.1 Equity-to-Assets Ratio
+
+```{python}
+#| label: fig-equity-ratio
+#| fig-cap: "Equity to Assets Ratio"
+
+eq_data = kpis[kpis["kpi_name"] == "equity_to_assets"]
+
+if len(eq_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = eq_data[eq_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"] * 100,
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Equity / Assets (%)")
+    ax.set_title("Capital Ratio: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Equity ratio data not available")
+```
+
+## 3.2 Leverage Ratio
+
+```{python}
+#| label: fig-leverage
+#| fig-cap: "Financial Leverage (Assets / Equity)"
+
+lev_data = kpis[kpis["kpi_name"] == "leverage"]
+
+if len(lev_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = lev_data[lev_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"],
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Leverage Multiple (x)")
+    ax.set_title("Financial Leverage: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Leverage data not available")
+```
+
+---
+
+# 4. Valuation Metrics
+
+## 4.1 Book Value Per Share
+
+```{python}
+#| label: fig-bvps
+#| fig-cap: "Book Value Per Share"
+
+bvps_data = kpis[kpis["kpi_name"] == "bvps"]
+
+if len(bvps_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = bvps_data[bvps_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"],
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("BVPS ($)")
+    ax.set_title("Book Value Per Share: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("BVPS data not available")
+```
+
+## 4.2 Tangible Book Value Per Share
+
+```{python}
+#| label: fig-tbvps
+#| fig-cap: "Tangible Book Value Per Share"
+
+tbvps_data = kpis[kpis["kpi_name"] == "tbvps"]
+
+if len(tbvps_data) > 0:
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = tbvps_data[tbvps_data["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(
+                data["date"], 
+                data["value"],
+                marker="o", 
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=2
+            )
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("TBVPS ($)")
+    ax.set_title("Tangible Book Value Per Share: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("TBVPS data not available")
+```
+
+---
+
+# 5. KPI Summary Table
+
+```{python}
+#| label: tbl-kpis
+#| tbl-cap: "Latest Quarter KPIs"
+
+# Pivot KPIs to wide format for comparison
+latest_kpis = kpis.sort_values("date").groupby(["ticker", "kpi_name"]).last().reset_index()
+kpi_pivot = latest_kpis.pivot(index="kpi_name", columns="ticker", values="value")
+
+# Format for display
+def format_kpi(val, kpi_name):
+    if pd.isna(val):
+        return "N/A"
+    if kpi_name in ["leverage"]:
+        return f"{val:.1f}x"
+    elif kpi_name in ["bvps", "tbvps", "eps", "ppnr"]:
+        return f"${val:,.2f}"
+    else:
+        return f"{val*100:.1f}%"
+
+display_df = kpi_pivot.copy()
+for col in display_df.columns:
+    display_df[col] = [format_kpi(v, idx) for idx, v in display_df[col].items()]
+
+print(display_df.to_string())
+```
+
+---
+
+# 6. Stock Price Performance
+
+```{python}
+#| label: fig-stock-price
+#| fig-cap: "Stock Price Performance"
+
+# Filter to recent period
+recent_prices = prices[prices["date"] >= "2019-01-01"]
+
+if len(recent_prices) > 0:
+    fig, axes = plt.subplots(2, 1, figsize=(10, 8))
+    
+    # Absolute prices
+    for ticker in ["JPM", "MS"]:
+        data = recent_prices[recent_prices["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            axes[0].plot(
+                data["date"], 
+                data["close"],
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=1
+            )
+    
+    axes[0].set_ylabel("Stock Price ($)")
+    axes[0].set_title("Stock Price: JPM vs Morgan Stanley")
+    axes[0].legend()
+    axes[0].grid(True, alpha=0.3)
+    
+    # Indexed performance (rebased to 100)
+    for ticker in ["JPM", "MS"]:
+        data = recent_prices[recent_prices["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            indexed = data["close"] / data["close"].iloc[0] * 100
+            axes[1].plot(
+                data["date"], 
+                indexed,
+                label=ticker,
+                color=COLORS.get(ticker),
+                linewidth=1
+            )
+    
+    axes[1].axhline(y=100, color="gray", linestyle="--", alpha=0.5)
+    axes[1].set_xlabel("Date")
+    axes[1].set_ylabel("Indexed Price (Start = 100)")
+    axes[1].set_title("Relative Performance (Indexed to Start)")
+    axes[1].legend()
+    axes[1].grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Price data not available")
+```
+
+---
+
+# Appendix: Data Sources & Methodology
+
+## Data Sources
+
+| Source | Description | Refresh |
+|--------|-------------|---------|
+| SEC EDGAR | XBRL company facts (10-K, 10-Q) | Quarterly |
+| Stooq | Daily stock prices | Daily |
+| Fama-French | 5-factor model returns | Daily |
+| FRED | Macroeconomic indicators | Various |
+
+## Methodology Notes
+
+1. **XBRL Normalization**: Raw SEC facts are mapped to standardized line items using a priority-ordered tag mapping system. When multiple tags report the same concept, we use the first available value.
+
+2. **Deduplication**: When multiple values exist for the same period (e.g., from restatements), we prefer 10-K/10-Q filings over 8-K, and take the most recent filing date.
+
+3. **Annualization**: ROE, ROA, and NIM are annualized by multiplying quarterly figures by 4.
+
+4. **Data Quality**: Automated checks validate balance sheet identities, sign consistency, and ratio reasonableness. See `data/processed/quality_report.csv` for any warnings.
+
+---
+
+*Report generated by BankLab. Data as of latest available SEC filings.*

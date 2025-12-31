@@ -1,0 +1,35 @@
+line_item,display_name,category,is_flow,expected_sign,unit,primary_tag,fallback_tags,description
+total_revenue,Total Revenue,income_statement,True,positive,USD,us-gaap:Revenues,"us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax, us-gaap:SalesRevenueNet, us-gaap:InterestAndDividendIncomeOperating",Total revenues including interest and non-interest income
+net_interest_income,Net Interest Income,income_statement,True,positive,USD,us-gaap:InterestIncomeExpenseNet,"us-gaap:NetInterestIncome, us-gaap:InterestIncomeExpenseAfterProvisionForLoanLoss",Interest income minus interest expense
+noninterest_income,Non-Interest Income,income_statement,True,positive,USD,us-gaap:NoninterestIncome,"us-gaap:FeesAndCommissions, us-gaap:InvestmentBankingRevenue","Fee income, trading, investment banking, etc."
+provision_for_credit_losses,Provision for Credit Losses,income_statement,True,any,USD,us-gaap:ProvisionForLoanLeaseAndOtherLosses,"us-gaap:ProvisionForLoanAndLeaseLosses, us-gaap:ProvisionForCreditLosses",Provision for loan losses and credit impairments
+noninterest_expense,Non-Interest Expense,income_statement,True,positive,USD,us-gaap:NoninterestExpense,"us-gaap:OperatingExpenses, us-gaap:GeneralAndAdministrativeExpense","Salaries, occupancy, technology, other operating costs"
+income_before_tax,Income Before Tax,income_statement,True,any,USD,us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest,"us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxes, us-gaap:IncomeLossBeforeIncomeTaxes",Pre-tax income from continuing operations
+income_tax_expense,Income Tax Expense,income_statement,True,any,USD,us-gaap:IncomeTaxExpenseBenefit,us-gaap:IncomeTaxesPaid,Current and deferred income tax expense
+net_income,Net Income,income_statement,True,any,USD,us-gaap:NetIncomeLoss,"us-gaap:ProfitLoss, us-gaap:NetIncomeLossAvailableToCommonStockholdersBasic",Net income attributable to common shareholders
+comprehensive_income,Comprehensive Income,income_statement,True,any,USD,us-gaap:ComprehensiveIncomeNetOfTax,us-gaap:ComprehensiveIncomeNetOfTaxIncludingPortionAttributableToNoncontrollingInterest,Net income plus other comprehensive income
+total_assets,Total Assets,balance_sheet,False,positive,USD,us-gaap:Assets,,Total assets
+cash_and_equivalents,Cash and Cash Equivalents,balance_sheet,False,positive,USD,us-gaap:CashAndCashEquivalentsAtCarryingValue,"us-gaap:Cash, us-gaap:CashCashEquivalentsAndShortTermInvestments",Cash and liquid assets
+trading_assets,Trading Assets,balance_sheet,False,positive,USD,us-gaap:TradingSecurities,"us-gaap:TradingAssets, us-gaap:MarketableSecurities",Securities held for trading
+investment_securities,Investment Securities,balance_sheet,False,positive,USD,us-gaap:AvailableForSaleSecuritiesDebtSecurities,"us-gaap:HeldToMaturitySecurities, us-gaap:InvestmentsInDebtAndMarketableEquitySecuritiesAndCertainTradingAssetsDisclosureTextBlock",AFS and HTM securities
+loans_net,"Loans, Net",balance_sheet,False,positive,USD,us-gaap:LoansAndLeasesReceivableNetReportedAmount,"us-gaap:LoansReceivableNet, us-gaap:LoansAndLeasesReceivableNetOfDeferredIncome",Net loans after allowance for loan losses
+allowance_for_loan_losses,Allowance for Loan Losses,balance_sheet,False,positive,USD,us-gaap:FinancingReceivableAllowanceForCreditLosses,"us-gaap:AllowanceForLoanAndLeaseLossesRealEstate, us-gaap:LoansAndLeasesReceivableAllowance",Reserve for expected credit losses
+goodwill,Goodwill,balance_sheet,False,positive,USD,us-gaap:Goodwill,,Goodwill from acquisitions
+intangible_assets,Intangible Assets,balance_sheet,False,positive,USD,us-gaap:IntangibleAssetsNetExcludingGoodwill,us-gaap:FiniteLivedIntangibleAssetsNet,Intangible assets excluding goodwill
+total_liabilities,Total Liabilities,balance_sheet,False,positive,USD,us-gaap:Liabilities,,Total liabilities
+total_deposits,Total Deposits,balance_sheet,False,positive,USD,us-gaap:Deposits,us-gaap:DepositsDomestic,Customer deposits
+short_term_borrowings,Short-Term Borrowings,balance_sheet,False,positive,USD,us-gaap:ShortTermBorrowings,"us-gaap:CommercialPaper, us-gaap:FederalFundsPurchasedAndSecuritiesSoldUnderAgreementsToRepurchase",Short-term debt and repo
+long_term_debt,Long-Term Debt,balance_sheet,False,positive,USD,us-gaap:LongTermDebt,"us-gaap:LongTermDebtNoncurrent, us-gaap:SeniorNotes",Long-term debt obligations
+total_equity,Total Stockholders' Equity,balance_sheet,False,positive,USD,us-gaap:StockholdersEquity,us-gaap:StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest,Total shareholders' equity
+common_stock,Common Stock,balance_sheet,False,positive,USD,us-gaap:CommonStockValue,us-gaap:CommonStocksIncludingAdditionalPaidInCapital,Common stock at par + APIC
+retained_earnings,Retained Earnings,balance_sheet,False,any,USD,us-gaap:RetainedEarningsAccumulatedDeficit,,Accumulated retained earnings
+treasury_stock,Treasury Stock,balance_sheet,False,positive,USD,us-gaap:TreasuryStockValue,us-gaap:TreasuryStockCommonValue,Treasury stock at cost
+accumulated_other_comprehensive_income,AOCI,balance_sheet,False,any,USD,us-gaap:AccumulatedOtherComprehensiveIncomeLossNetOfTax,,Accumulated other comprehensive income/loss
+shares_outstanding,Shares Outstanding,shares,False,positive,shares,us-gaap:CommonStockSharesOutstanding,us-gaap:CommonStockSharesIssued,Common shares outstanding
+weighted_avg_shares_basic,Weighted Avg Shares (Basic),shares,True,positive,shares,us-gaap:WeightedAverageNumberOfSharesOutstandingBasic,,Weighted average shares for basic EPS
+weighted_avg_shares_diluted,Weighted Avg Shares (Diluted),shares,True,positive,shares,us-gaap:WeightedAverageNumberOfDilutedSharesOutstanding,,Weighted average shares for diluted EPS
+operating_cash_flow,Operating Cash Flow,cash_flow,True,any,USD,us-gaap:NetCashProvidedByUsedInOperatingActivities,,Net cash from operating activities
+investing_cash_flow,Investing Cash Flow,cash_flow,True,any,USD,us-gaap:NetCashProvidedByUsedInInvestingActivities,,Net cash from investing activities
+financing_cash_flow,Financing Cash Flow,cash_flow,True,any,USD,us-gaap:NetCashProvidedByUsedInFinancingActivities,,Net cash from financing activities
+dividends_paid,Dividends Paid,cash_flow,True,positive,USD,us-gaap:PaymentsOfDividendsCommonStock,us-gaap:PaymentsOfDividends,Cash dividends paid to shareholders
+share_repurchases,Share Repurchases,cash_flow,True,positive,USD,us-gaap:PaymentsForRepurchaseOfCommonStock,us-gaap:StockRepurchasedDuringPeriodValue,Cash paid for share buybacks

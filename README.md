@@ -1,6 +1,6 @@
 # BankLab: JPM vs Morgan Stanley Analytics Platform
 
-[![CI](https://github.com/Leotaby/BankLab/actions/workflows/ci.yml/badge.svg)](https://github.com/Leotaby/BankLab/actions/workflows/ci.yml)
+[![CI](https://github.com/Leotaby/banklab/actions/workflows/ci.yml/badge.svg)](https://github.com/Leotaby/banklab/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -19,7 +19,7 @@ BankLab provides a clean, professional pipeline for:
 
 ```bash
 # Clone and setup
-git clone https://github.com/Leotaby/BankLab.git
+git clone https://github.com/Leotaby/banklab.git
 cd banklab
 pip install -e ".[dev]"
 
@@ -168,6 +168,6 @@ If you use this platform in research, please cite:
   author = {Leo Tabatabaei},
   title = {BankLab: JPM vs Morgan Stanley Analytics Platform},
   year = {2025},
-  url = {https://github.com/Leotaby/BankLab}
+  url = {https://github.com/Leotaby/banklab}
 }
 ```
