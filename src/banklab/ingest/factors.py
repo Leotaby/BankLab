@@ -6,7 +6,7 @@ import zipfile
 
 import pandas as pd
 
-from banklab.config import Config, DEFAULT_CONFIG
+from banklab.config import DEFAULT_CONFIG, Config
 from banklab.utils.cache import CacheManager, DataManifest
 from banklab.utils.http import PoliteRequester
 
@@ -26,9 +26,11 @@ class FactorsLoader:
             user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
             rate_limit=1.0,
         )
-        self.requester.session.headers.update({
-            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        })
+        self.requester.session.headers.update(
+            {
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            }
+        )
         self.manifest = DataManifest(self.config.manifest_path)
         self.cache = CacheManager(self.config.raw_dir / "factors", self.manifest)
 
@@ -41,7 +43,9 @@ class FactorsLoader:
                 return self._parse_ff_zip(cached)
         logger.info("Downloading Fama-French 5-factor data")
         zip_bytes = self.requester.get_bytes(FF_5_FACTORS_URL)
-        self.cache.store(cache_key, zip_bytes, FF_5_FACTORS_URL, notes="Fama-French daily 5-factor model")
+        self.cache.store(
+            cache_key, zip_bytes, FF_5_FACTORS_URL, notes="Fama-French daily 5-factor model"
+        )
         return self._parse_ff_zip(zip_bytes)
 
     def _parse_ff_zip(self, zip_bytes: bytes) -> pd.DataFrame:
@@ -58,7 +62,7 @@ class FactorsLoader:
 
         csv_text = csv_bytes.decode("utf-8")
         lines = csv_text.split("\n")
-        
+
         # Find where data starts (line starting with 8 digits = date)
         data_start = 0
         for i, line in enumerate(lines):
@@ -69,22 +73,22 @@ class FactorsLoader:
                 if first_part.isdigit() and len(first_part) == 8:
                     data_start = i
                     break
-        
+
         logger.info(f"Data starts at line {data_start}")
-        
+
         df = pd.read_csv(
             io.StringIO("\n".join(lines[data_start:])),
             header=None,
             names=["date", "mktrf", "smb", "hml", "rmw", "cma", "rf"],
             on_bad_lines="skip",
         )
-        
+
         df["date"] = pd.to_datetime(df["date"], format="%Y%m%d", errors="coerce")
         df = df.dropna(subset=["date"])
-        
+
         for col in ["mktrf", "smb", "hml", "rmw", "cma", "rf"]:
             df[col] = pd.to_numeric(df[col], errors="coerce") / 100
-        
+
         df = df.sort_values("date").reset_index(drop=True)
         logger.info(f"Parsed {len(df)} daily factor observations")
         return df
