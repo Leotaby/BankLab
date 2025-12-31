@@ -1,0 +1,14 @@
+# BankLab Data Manifest
+# Auto-generated file tracking data provenance
+# Do not edit manually - managed by banklab.utils.cache
+
+files: {}
+
+# Schema:
+# files:
+#   <file_key>:
+#     source_url: <original URL>
+#     download_timestamp: <ISO 8601 timestamp>
+#     file_hash: <SHA256 hash>
+#     local_path: <path to cached file>
+#     notes: <optional description>
