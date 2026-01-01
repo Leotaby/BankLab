@@ -165,7 +165,7 @@ If you use this platform in research, please cite:
 
 ```bibtex
 @software{banklab2025,
-  author = {Leo Tabatabaei},
+  author = {Hatef Tabbakhian},
   title = {BankLab: JPM vs Morgan Stanley Analytics Platform},
   year = {2025},
   url = {https://github.com/Leotaby/banklab}
