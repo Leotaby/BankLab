@@ -91,8 +91,9 @@ def compute_rolling_volatility(
 
     for window in windows:
         col_name = f"vol_{window}d"
+        w = window  # bind loop variable
         df[col_name] = df.groupby("ticker")["return"].transform(
-            lambda x: x.rolling(window, min_periods=window // 2).std() * annualization
+            lambda x, w=w: x.rolling(w, min_periods=w // 2).std() * annualization
         )
 
     return df
