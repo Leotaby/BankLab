@@ -38,9 +38,7 @@ class ModelingDatasetBuilder:
 
     def load_fundamentals(self) -> pd.DataFrame:
         """Load fundamentals for control variables."""
-        fund = pd.read_parquet(
-            self.processed_dir / "fundamentals_quarterly_wide.parquet"
-        )
+        fund = pd.read_parquet(self.processed_dir / "fundamentals_quarterly_wide.parquet")
 
         # Select control variables
         controls = ["ticker", "fiscal_year", "fiscal_period", "date"]
@@ -73,9 +71,7 @@ class ModelingDatasetBuilder:
                 .last()
                 .reset_index()[["ticker", "year", "quarter", "beta_mktrf", "r_squared"]]
             )
-            returns = returns.merge(
-                betas_q, on=["ticker", "year", "quarter"], how="left"
-            )
+            returns = returns.merge(betas_q, on=["ticker", "year", "quarter"], how="left")
 
         return returns
 
@@ -180,9 +176,7 @@ class ModelingDatasetBuilder:
 
         # Derive year/quarter for merging
         df["year"] = df["fiscal_year"]
-        df["quarter"] = (
-            df["fiscal_period"].str.extract(r"Q(\d)").astype(float).squeeze()
-        )
+        df["quarter"] = df["fiscal_period"].str.extract(r"Q(\d)").astype(float).squeeze()
         # Handle FY periods
         df.loc[df["fiscal_period"] == "FY", "quarter"] = 4
 

@@ -71,9 +71,7 @@ def estimate_event_study(
         event_idx = ticker_ret[ticker_ret["date"] == event_date].index
         if len(event_idx) == 0:
             # Find closest trading day
-            ticker_ret["date_diff"] = abs(
-                (ticker_ret["date"] - event_date).dt.total_seconds()
-            )
+            ticker_ret["date_diff"] = abs((ticker_ret["date"] - event_date).dt.total_seconds())
             closest_idx = ticker_ret["date_diff"].idxmin()
             if ticker_ret.loc[closest_idx, "date_diff"] > 5 * 86400:  # 5 days
                 logger.warning(f"No trading day near {event_date} for {ticker}")
@@ -130,9 +128,7 @@ def estimate_event_study(
 
         # CAR and BHAR
         car = evt_data["abnormal_return"].sum()
-        bhar = (1 + evt_data["return"]).prod() - (
-            1 + evt_data["expected_return"]
-        ).prod()
+        bhar = (1 + evt_data["return"]).prod() - (1 + evt_data["expected_return"]).prod()
 
         # CAR t-statistic (assuming independence)
         n_evt = len(evt_data)
@@ -151,9 +147,7 @@ def estimate_event_study(
                 car_pval=car_pval,
                 bhar=bhar,
                 n_estimation_days=len(est_data),
-                abnormal_returns=evt_data[
-                    ["date", "return", "expected_return", "abnormal_return"]
-                ],
+                abnormal_returns=evt_data[["date", "return", "expected_return", "abnormal_return"]],
             )
         )
 

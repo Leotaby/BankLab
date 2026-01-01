@@ -50,9 +50,7 @@ def compute_returns(
     df = df.sort_values(["ticker", "date"])
 
     if method == "log":
-        df["return"] = df.groupby("ticker")[price_col].transform(
-            lambda x: np.log(x / x.shift(1))
-        )
+        df["return"] = df.groupby("ticker")[price_col].transform(lambda x: np.log(x / x.shift(1)))
     else:
         df["return"] = df.groupby("ticker")[price_col].pct_change()
 
@@ -122,9 +120,7 @@ def compute_drawdowns(returns: pd.DataFrame) -> pd.DataFrame:
     )
 
     # Running maximum
-    df["running_max"] = df.groupby("ticker")["cum_wealth"].transform(
-        lambda x: x.cummax()
-    )
+    df["running_max"] = df.groupby("ticker")["cum_wealth"].transform(lambda x: x.cummax())
 
     # Drawdown as percentage from peak
     df["drawdown"] = (df["cum_wealth"] - df["running_max"]) / df["running_max"]
@@ -252,6 +248,7 @@ def returns_to_monthly(returns: pd.DataFrame) -> pd.DataFrame:
         Columns: ticker, year, month, monthly_return, monthly_vol
     """
     df = returns.copy()
+    df["date"] = pd.to_datetime(df["date"])
     df["year"] = df["date"].dt.year
     df["month"] = df["date"].dt.month
 
@@ -278,6 +275,7 @@ def returns_to_quarterly(returns: pd.DataFrame) -> pd.DataFrame:
         Columns: ticker, year, quarter, quarterly_return, quarterly_vol, n_obs
     """
     df = returns.copy()
+    df["date"] = pd.to_datetime(df["date"])
     df["year"] = df["date"].dt.year
     df["quarter"] = df["date"].dt.quarter
 

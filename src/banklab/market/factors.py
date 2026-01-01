@@ -137,9 +137,7 @@ def estimate_ff5(
 
         # Excess returns
         y = merged["return"].values - merged["rf"].values
-        X = np.column_stack(
-            [np.ones(len(merged))] + [merged[f].values for f in factor_cols]
-        )
+        X = np.column_stack([np.ones(len(merged))] + [merged[f].values for f in factor_cols])
 
         # OLS
         beta_hat, _, _, _ = np.linalg.lstsq(X, y, rcond=None)
@@ -237,8 +235,7 @@ def estimate_rolling_betas(
 
             y = window_data["return"].values - window_data["rf"].values
             X = np.column_stack(
-                [np.ones(len(window_data))]
-                + [window_data[f].values for f in factor_cols]
+                [np.ones(len(window_data))] + [window_data[f].values for f in factor_cols]
             )
 
             try:
@@ -258,9 +255,7 @@ def estimate_rolling_betas(
 
                 results.append(row)
             except Exception as e:
-                logger.warning(
-                    f"Rolling beta error at {window_data['date'].iloc[-1]}: {e}"
-                )
+                logger.warning(f"Rolling beta error at {window_data['date'].iloc[-1]}: {e}")
                 continue
 
     return pd.DataFrame(results)
