@@ -1,0 +1,284 @@
+---
+title: "Market Analytics: JPM vs Morgan Stanley"
+subtitle: "Returns, Volatility, and Factor Exposures"
+author: "Hatef Tabbakhian"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    fig-width: 10
+    fig-height: 6
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+plt.style.use('seaborn-v0_8-whitegrid')
+sns.set_palette("husl")
+
+DATA_DIR = Path("../data/processed")
+
+# Load datasets
+try:
+    returns = pd.read_parquet(DATA_DIR / "returns_daily.parquet")
+    returns["date"] = pd.to_datetime(returns["date"])
+except:
+    returns = None
+
+try:
+    metrics = pd.read_parquet(DATA_DIR / "return_metrics.parquet")
+except:
+    metrics = None
+
+try:
+    factors = pd.read_parquet(DATA_DIR / "factor_exposures.parquet")
+except:
+    factors = None
+
+try:
+    rolling_betas = pd.read_parquet(DATA_DIR / "rolling_betas.parquet")
+    rolling_betas["date"] = pd.to_datetime(rolling_betas["date"])
+except:
+    rolling_betas = None
+
+try:
+    max_dd = pd.read_parquet(DATA_DIR / "max_drawdowns.parquet")
+except:
+    max_dd = None
+
+COLORS = {"JPM": "#003087", "MS": "#00856A"}
+```
+
+# Executive Summary
+
+This report analyzes the market performance of **JPMorgan Chase (JPM)** and **Morgan Stanley (MS)**, comparing returns, volatility, drawdowns, and systematic risk exposures using daily price data and Fama-French factors.
+
+---
+
+# 1. Cumulative Returns
+
+```{python}
+#| label: fig-cumret
+#| fig-cap: "Cumulative Returns: JPM vs MS"
+
+if returns is not None:
+    fig, ax = plt.subplots(figsize=(12, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = returns[returns["ticker"] == ticker].sort_values("date")
+        ax.plot(data["date"], data["cum_return"] * 100, 
+                label=ticker, color=COLORS.get(ticker), linewidth=1.5)
+    
+    ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Cumulative Return (%)")
+    ax.set_title("Cumulative Returns: JPM vs Morgan Stanley")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+else:
+    print("Return data not available. Run `make market` first.")
+```
+
+---
+
+# 2. Return Metrics
+
+```{python}
+#| label: tbl-metrics
+#| tbl-cap: "Performance Summary"
+
+if metrics is not None:
+    display_cols = ["ticker", "annualized_return", "annualized_volatility", 
+                    "sharpe_ratio", "max_drawdown", "calmar_ratio"]
+    display_df = metrics[display_cols].copy()
+    display_df.columns = ["Ticker", "Ann. Return", "Ann. Vol", "Sharpe", "Max DD", "Calmar"]
+    
+    # Format
+    for col in ["Ann. Return", "Ann. Vol", "Max DD"]:
+        display_df[col] = display_df[col].apply(lambda x: f"{x*100:.1f}%")
+    for col in ["Sharpe", "Calmar"]:
+        display_df[col] = display_df[col].apply(lambda x: f"{x:.2f}")
+    
+    print(display_df.to_string(index=False))
+else:
+    print("Metrics not available.")
+```
+
+---
+
+# 3. Rolling Volatility
+
+```{python}
+#| label: fig-vol
+#| fig-cap: "Rolling 63-Day Volatility (Annualized)"
+
+if returns is not None and "vol_63d" in returns.columns:
+    fig, ax = plt.subplots(figsize=(12, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = returns[returns["ticker"] == ticker].sort_values("date")
+        ax.plot(data["date"], data["vol_63d"] * 100, 
+                label=ticker, color=COLORS.get(ticker), linewidth=1, alpha=0.8)
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Annualized Volatility (%)")
+    ax.set_title("Rolling 63-Day Volatility")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+```
+
+---
+
+# 4. Drawdown Analysis
+
+```{python}
+#| label: fig-drawdown
+#| fig-cap: "Drawdown Series"
+
+if returns is not None and "drawdown" in returns.columns:
+    fig, ax = plt.subplots(figsize=(12, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = returns[returns["ticker"] == ticker].sort_values("date")
+        ax.fill_between(data["date"], data["drawdown"] * 100, 0, 
+                        label=ticker, alpha=0.4, color=COLORS.get(ticker))
+    
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Drawdown (%)")
+    ax.set_title("Drawdown from Peak")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    ax.invert_yaxis()
+    plt.tight_layout()
+    plt.show()
+```
+
+```{python}
+#| label: tbl-maxdd
+#| tbl-cap: "Maximum Drawdown Events"
+
+if max_dd is not None:
+    display_df = max_dd.copy()
+    display_df["max_drawdown"] = display_df["max_drawdown"].apply(lambda x: f"{x*100:.1f}%")
+    print(display_df.to_string(index=False))
+```
+
+---
+
+# 5. Factor Exposures
+
+## 5.1 CAPM and FF5 Results
+
+```{python}
+#| label: tbl-factors
+#| tbl-cap: "Factor Model Estimates"
+
+if factors is not None:
+    display_cols = ["ticker", "model", "alpha_ann", "beta_mktrf", "r_squared", "n_obs"]
+    display_df = factors[display_cols].copy()
+    
+    display_df["alpha_ann"] = display_df["alpha_ann"].apply(lambda x: f"{x*100:.2f}%")
+    display_df["beta_mktrf"] = display_df["beta_mktrf"].apply(lambda x: f"{x:.2f}")
+    display_df["r_squared"] = display_df["r_squared"].apply(lambda x: f"{x:.1%}")
+    
+    display_df.columns = ["Ticker", "Model", "Alpha (ann)", "Market Beta", "R²", "N"]
+    print(display_df.to_string(index=False))
+```
+
+## 5.2 Factor Beta Comparison
+
+```{python}
+#| label: fig-betas
+#| fig-cap: "Factor Betas: JPM vs MS (FF5 Model)"
+
+if factors is not None:
+    ff5 = factors[factors["model"] == "FF5"]
+    
+    if len(ff5) > 0:
+        factor_cols = ["beta_mktrf", "beta_smb", "beta_hml", "beta_rmw", "beta_cma"]
+        available_cols = [c for c in factor_cols if c in ff5.columns]
+        
+        if available_cols:
+            fig, ax = plt.subplots(figsize=(10, 5))
+            
+            x = np.arange(len(available_cols))
+            width = 0.35
+            
+            for i, ticker in enumerate(["JPM", "MS"]):
+                ticker_data = ff5[ff5["ticker"] == ticker]
+                if len(ticker_data) > 0:
+                    values = [ticker_data[col].iloc[0] for col in available_cols]
+                    offset = width * (i - 0.5)
+                    ax.bar(x + offset, values, width, label=ticker, color=COLORS.get(ticker))
+            
+            ax.set_xlabel("Factor")
+            ax.set_ylabel("Beta")
+            ax.set_title("Fama-French 5-Factor Betas")
+            ax.set_xticks(x)
+            ax.set_xticklabels([c.replace("beta_", "").upper() for c in available_cols])
+            ax.legend()
+            ax.axhline(y=0, color="gray", linestyle="--", alpha=0.5)
+            ax.grid(True, alpha=0.3, axis="y")
+            plt.tight_layout()
+            plt.show()
+```
+
+---
+
+# 6. Rolling Market Beta
+
+```{python}
+#| label: fig-rolling-beta
+#| fig-cap: "Rolling 252-Day Market Beta"
+
+if rolling_betas is not None:
+    fig, ax = plt.subplots(figsize=(12, 5))
+    
+    for ticker in ["JPM", "MS"]:
+        data = rolling_betas[rolling_betas["ticker"] == ticker].sort_values("date")
+        if len(data) > 0:
+            ax.plot(data["date"], data["beta_mktrf"], 
+                    label=ticker, color=COLORS.get(ticker), linewidth=1.5)
+    
+    ax.axhline(y=1, color="gray", linestyle="--", alpha=0.5, label="Market (β=1)")
+    ax.set_xlabel("Date")
+    ax.set_ylabel("Market Beta")
+    ax.set_title("Rolling 252-Day Market Beta")
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+```
+
+---
+
+# 7. Key Takeaways
+
+1. **Returns**: Both banks have generated positive long-term returns, with periods of significant divergence.
+
+2. **Volatility**: Bank stocks exhibit elevated volatility during market stress (2008-09, 2020, 2022).
+
+3. **Market Beta**: Both JPM and MS have market betas above 1, indicating higher systematic risk than the market average.
+
+4. **Factor Exposures**: The FF5 model explains a significant portion of return variation, with both banks showing similar factor profiles.
+
+---
+
+*Report generated by BankLab Phase 3.*

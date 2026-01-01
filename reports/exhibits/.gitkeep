@@ -1,0 +1,2 @@
+# This directory contains LaTeX tables exported from Stata
+# Run `stata -b do stata/run_all.do` to generate tables

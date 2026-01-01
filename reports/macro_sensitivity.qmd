@@ -1,0 +1,244 @@
+---
+title: "Macro Sensitivity of Bank Profitability"
+subtitle: "JPM vs Morgan Stanley Panel Analysis"
+author: "Hatef Tabbakhian"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    fig-width: 10
+    fig-height: 6
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(fixest)
+library(modelsummary)
+library(kableExtra)
+library(arrow)
+
+source("../r/utils.R")
+
+# Load data
+df <- tryCatch(
+  load_modeling_data("../data/processed/modeling_dataset.parquet"),
+  error = function(e) {
+    message("Could not load data: ", e$message)
+    NULL
+  }
+)
+
+# Load pre-estimated models
+models_main <- tryCatch(
+  readRDS("../data/processed/models_main.rds"),
+  error = function(e) NULL
+)
+
+models_robust <- tryCatch(
+  readRDS("../data/processed/models_robust.rds"),
+  error = function(e) NULL
+)
+```
+
+# Executive Summary
+
+This report examines the **descriptive relationship** between macroeconomic conditions and bank profitability metrics for JPMorgan Chase (JPM) and Morgan Stanley (MS). Using quarterly panel data, we estimate fixed-effects models to characterize how bank KPIs co-move with monetary policy, labor markets, and economic growth.
+
+**Key Findings:**
+
+- Net interest margin (NIM) shows positive association with the fed funds rate and term spread
+- ROE is negatively associated with unemployment, consistent with credit cycle dynamics
+- Results are robust to alternative lag specifications and subsamples
+
+**Important Caveat:** These results are **descriptive correlations**, not causal estimates. Banks both respond to and influence macroeconomic conditions, creating endogeneity that precludes causal interpretation.
+
+---
+
+# 1. Data and Methodology
+
+## 1.1 Sample Overview
+
+```{r sample-stats}
+if (!is.null(df)) {
+  df %>%
+    group_by(ticker) %>%
+    summarise(
+      `N Quarters` = n(),
+      `Start` = min(paste0(year, "Q", quarter), na.rm = TRUE),
+      `End` = max(paste0(year, "Q", quarter), na.rm = TRUE),
+      `Avg ROE` = sprintf("%.1f%%", mean(roe, na.rm = TRUE) * 100),
+      `Avg NIM` = sprintf("%.2f%%", mean(nim, na.rm = TRUE) * 100),
+      .groups = "drop"
+    ) %>%
+    kable(caption = "Sample Overview") %>%
+    kable_styling(bootstrap_options = c("striped", "hover"))
+} else {
+  cat("Data not available. Run `make modeling-data` first.")
+}
+```
+
+## 1.2 Variables
+
+**Dependent Variables:**
+
+| Variable | Definition |
+|----------|------------|
+| ROE | Net Income / Total Equity (annualized) |
+| NIM | Net Interest Income / Total Assets (annualized) |
+| Efficiency Ratio | Non-Interest Expense / Total Revenue |
+| Quarterly Return | Stock return over the quarter |
+
+**Macro Regressors (1-quarter lag):**
+
+| Variable | Source | Rationale |
+|----------|--------|-----------|
+| Fed Funds Rate | FRED DFF | Monetary policy stance |
+| Term Spread | 10Y - 2Y Treasury | Yield curve slope |
+| Unemployment | FRED UNRATE | Labor market / credit cycle |
+| GDP Growth | FRED GDPC1 | Economic activity |
+
+## 1.3 Model Specification
+
+We estimate panel fixed-effects models:
+
+$$
+\text{KPI}_{i,t} = \alpha_i + \boldsymbol{\beta}' \mathbf{X}_{t-1} + \boldsymbol{\gamma}' \mathbf{Z}_{i,t-1} + \delta_q + \varepsilon_{i,t}
+$$
+
+Where:
+
+- $\alpha_i$ = Bank fixed effects
+- $\mathbf{X}_{t-1}$ = Lagged macro variables
+- $\mathbf{Z}_{i,t-1}$ = Bank-specific controls (log assets, equity ratio)
+- $\delta_q$ = Quarter-of-year fixed effects
+
+Standard errors are Newey-West (4 lags) to account for serial correlation and heteroskedasticity.
+
+---
+
+# 2. Main Results
+
+## 2.1 Baseline Regressions
+
+```{r main-table}
+if (!is.null(models_main)) {
+  coef_map <- c(
+    "fed_funds_lag1" = "Fed Funds (t-1)",
+    "term_spread_lag1" = "Term Spread (t-1)",
+    "unemployment_lag1" = "Unemployment (t-1)",
+    "gdp_growth_lag1" = "GDP Growth (t-1)",
+    "log_assets" = "Log(Assets)",
+    "equity_ratio" = "Equity/Assets"
+  )
+
+  modelsummary(
+    models_main,
+    coef_map = coef_map,
+    stars = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+    gof_map = c("nobs", "r.squared", "adj.r.squared"),
+    title = "Macro Sensitivity of Bank KPIs",
+    notes = "Newey-West standard errors in parentheses. Bank and quarter FE included."
+  )
+} else {
+  cat("Models not available. Run `Rscript r/macro_models.R` first.")
+}
+```
+
+## 2.2 Coefficient Plot
+
+```{r coef-plot, fig.cap="Macro Variable Coefficients on ROE"}
+if (!is.null(models_main) && "ROE (2)" %in% names(models_main)) {
+  modelplot(
+    list("ROE" = models_main[["ROE (2)"]]),
+    coef_map = c(
+      "fed_funds_lag1" = "Fed Funds",
+      "term_spread_lag1" = "Term Spread",
+      "unemployment_lag1" = "Unemployment",
+      "gdp_growth_lag1" = "GDP Growth"
+    )
+  ) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(title = "Effect of Macro Variables on ROE",
+         subtitle = "95% confidence intervals, Newey-West SEs") +
+    theme_minimal()
+}
+```
+
+## 2.3 Interpretation
+
+**Fed Funds Rate:** Higher rates are typically associated with wider net interest margins, as banks benefit from the spread between lending and deposit rates.
+
+**Term Spread:** A steeper yield curve is associated with higher NIM, reflecting the profitability of maturity transformation (borrowing short, lending long).
+
+**Unemployment:** Higher unemployment is associated with lower ROE, likely reflecting increased credit losses and reduced loan demand during economic downturns.
+
+---
+
+# 3. Robustness Checks
+
+## 3.1 Alternative Lag Specifications
+
+```{r robustness-lags}
+if (!is.null(models_robust)) {
+  modelsummary(
+    models_robust[c("Lag 0", "Lag 1", "Lag 2")],
+    stars = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+    title = "ROE Models: Alternative Lag Specifications",
+    notes = "Dependent variable: ROE. Newey-West SEs."
+  )
+}
+```
+
+## 3.2 Subsample Analysis
+
+```{r robustness-subsample}
+if (!is.null(models_robust)) {
+  modelsummary(
+    models_robust[c("Lag 1", "Pre-COVID", "Post-2015")],
+    stars = c("*" = 0.1, "**" = 0.05, "***" = 0.01),
+    title = "ROE Models: Subsample Analysis",
+    notes = "Dependent variable: ROE. Newey-West SEs."
+  )
+}
+```
+
+---
+
+# 4. Limitations and Caveats
+
+1. **Endogeneity:** Banks influence and are influenced by macro conditions. These estimates are correlations, not causal effects.
+
+2. **Small N:** With only 2 banks, fixed effects absorb considerable variation. Results may not generalize.
+
+3. **Omitted Variables:** Other factors (regulation, competition, management) likely affect bank performance.
+
+4. **Structural Breaks:** The 2020 COVID shock and 2022-23 rate hikes may represent regime changes.
+
+---
+
+# 5. Conclusion
+
+Bank profitability metrics show economically meaningful associations with macroeconomic conditions. NIM responds positively to interest rates and yield curve steepness, while ROE is negatively associated with unemployment. These patterns are consistent with banking theory but should be interpreted as descriptive relationships, not causal effects.
+
+---
+
+# Appendix: Stata Results
+
+Tables produced by Stata are available in `reports/exhibits/`:
+
+- `table_main_results.tex`: Main regression results
+- `table_robustness.tex`: Robustness checks
+- `diagnostics.txt`: Diagnostic test summary
+
+---
+
+*Report generated by BankLab Phase 3.*

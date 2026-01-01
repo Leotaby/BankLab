@@ -60,3 +60,28 @@ help:
 	@echo "  make clean        - Remove cached data and build artifacts"
 	@echo "  make clean-all    - Remove all data including processed outputs"
 	@echo "  make help         - Show this help message"
+
+# ============================================================
+# Phase 3: Market Analytics & Econometrics
+# ============================================================
+
+.PHONY: phase3 market modeling-data r-models stata-models reports-phase3
+
+phase3: market modeling-data r-models reports-phase3
+	@echo "Phase 3 complete!"
+
+market:
+	python -c "from banklab.market.pipeline import run_market_pipeline; run_market_pipeline()"
+
+modeling-data: market
+	python -c "from banklab.econometrics.modeling_dataset import build_modeling_dataset; build_modeling_dataset()"
+
+r-models: modeling-data
+	cd r && Rscript macro_models.R
+
+stata-models: modeling-data
+	cd stata && stata -b do run_all.do
+
+reports-phase3:
+	quarto render reports/market_analytics.qmd
+	quarto render reports/macro_sensitivity.qmd
