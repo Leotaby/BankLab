@@ -48,13 +48,15 @@ class QualityReport:
             return pd.DataFrame()
         records = []
         for w in self.warnings:
-            records.append({
-                "check_name": w.check_name,
-                "severity": w.severity.value,
-                "ticker": w.ticker,
-                "period": w.period,
-                "message": w.message,
-            })
+            records.append(
+                {
+                    "check_name": w.check_name,
+                    "severity": w.severity.value,
+                    "ticker": w.ticker,
+                    "period": w.period,
+                    "message": w.message,
+                }
+            )
         return pd.DataFrame(records)
 
     def __repr__(self) -> str:
@@ -83,20 +85,28 @@ def check_balance_sheet_identity(
         rel_diff = diff / abs(assets)
         if rel_diff > tolerance:
             period = f"{row.get('fiscal_year', '')}-{row.get('fiscal_period', '')}"
-            report.add(QualityWarning(
-                check_name="balance_sheet_identity",
-                severity=Severity.WARNING,
-                ticker=row.get("ticker", ""),
-                period=period,
-                message=f"Balance sheet doesn't balance: A={assets:,.0f}, L+E={expected:,.0f}",
-                details={"diff": diff, "rel_diff": rel_diff},
-            ))
+            report.add(
+                QualityWarning(
+                    check_name="balance_sheet_identity",
+                    severity=Severity.WARNING,
+                    ticker=row.get("ticker", ""),
+                    period=period,
+                    message=f"Balance sheet doesn't balance: A={assets:,.0f}, L+E={expected:,.0f}",
+                    details={"diff": diff, "rel_diff": rel_diff},
+                )
+            )
 
 
 def check_positive_values(df: pd.DataFrame, report: QualityReport) -> None:
     report.checks_run.append("positive_values")
-    positive_cols = ["total_assets", "total_liabilities", "total_equity",
-                     "total_deposits", "loans_net", "shares_outstanding"]
+    positive_cols = [
+        "total_assets",
+        "total_liabilities",
+        "total_equity",
+        "total_deposits",
+        "loans_net",
+        "shares_outstanding",
+    ]
     for col in positive_cols:
         if col not in df.columns:
             continue
@@ -104,14 +114,16 @@ def check_positive_values(df: pd.DataFrame, report: QualityReport) -> None:
             val = row.get(col)
             if pd.notna(val) and val < 0:
                 period = f"{row.get('fiscal_year', '')}-{row.get('fiscal_period', '')}"
-                report.add(QualityWarning(
-                    check_name="positive_values",
-                    severity=Severity.ERROR,
-                    ticker=row.get("ticker", ""),
-                    period=period,
-                    message=f"{col} is negative: {val:,.0f}",
-                    details={"column": col, "value": val},
-                ))
+                report.add(
+                    QualityWarning(
+                        check_name="positive_values",
+                        severity=Severity.ERROR,
+                        ticker=row.get("ticker", ""),
+                        period=period,
+                        message=f"{col} is negative: {val:,.0f}",
+                        details={"column": col, "value": val},
+                    )
+                )
 
 
 def check_reasonable_ratios(df: pd.DataFrame, report: QualityReport) -> None:
@@ -130,23 +142,27 @@ def check_reasonable_ratios(df: pd.DataFrame, report: QualityReport) -> None:
                 continue
             period = f"{row.get('fiscal_year', '')}-{row.get('fiscal_period', '')}"
             if val < low:
-                report.add(QualityWarning(
-                    check_name="reasonable_ratios",
-                    severity=Severity.WARNING,
-                    ticker=row.get("ticker", ""),
-                    period=period,
-                    message=f"{col} is unusually low: {val:.4f}",
-                    details={"column": col, "value": val},
-                ))
+                report.add(
+                    QualityWarning(
+                        check_name="reasonable_ratios",
+                        severity=Severity.WARNING,
+                        ticker=row.get("ticker", ""),
+                        period=period,
+                        message=f"{col} is unusually low: {val:.4f}",
+                        details={"column": col, "value": val},
+                    )
+                )
             elif val > high:
-                report.add(QualityWarning(
-                    check_name="reasonable_ratios",
-                    severity=Severity.WARNING,
-                    ticker=row.get("ticker", ""),
-                    period=period,
-                    message=f"{col} is unusually high: {val:.4f}",
-                    details={"column": col, "value": val},
-                ))
+                report.add(
+                    QualityWarning(
+                        check_name="reasonable_ratios",
+                        severity=Severity.WARNING,
+                        ticker=row.get("ticker", ""),
+                        period=period,
+                        message=f"{col} is unusually high: {val:.4f}",
+                        details={"column": col, "value": val},
+                    )
+                )
 
 
 def check_temporal_consistency(
@@ -168,14 +184,16 @@ def check_completeness(
     for ticker in df["ticker"].unique() if "ticker" in df.columns else []:
         for item in required_items:
             if item not in df.columns:
-                report.add(QualityWarning(
-                    check_name="completeness",
-                    severity=Severity.ERROR,
-                    ticker=ticker,
-                    period="all",
-                    message=f"Missing required line item: {item}",
-                    details={"item": item},
-                ))
+                report.add(
+                    QualityWarning(
+                        check_name="completeness",
+                        severity=Severity.ERROR,
+                        ticker=ticker,
+                        period="all",
+                        message=f"Missing required line item: {item}",
+                        details={"item": item},
+                    )
+                )
 
 
 def run_all_checks(df: pd.DataFrame, include_kpi_checks: bool = True) -> QualityReport:
